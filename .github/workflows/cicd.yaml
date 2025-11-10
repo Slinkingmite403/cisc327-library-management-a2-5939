@@ -2,7 +2,7 @@ name: CICD
 
 on:
   push:
-  pull-request:
+  pull_request:
 
 
 jobs:
