@@ -141,7 +141,7 @@ def get_all_books() -> List[Dict]:
 def get_book_by_id(book_id: int) -> Optional[Dict]:
     """Get a specific book by ID."""
     conn = get_db_connection()
-    book = conn.execute('SELECT * FROM sample_books WHERE id = ?', (book_id,)).fetchone()
+    book = conn.execute('SELECT * FROM books WHERE id = ?', (book_id,)).fetchone()
     conn.close()
     return dict(book) if book else None
 
