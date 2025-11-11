@@ -176,8 +176,8 @@ def calculate_late_fee_for_book(patron_id: str, book_id: int) -> Dict:
     due_date = book_record["due_date"]
     due_date = due_date.date() if hasattr(due_date, "date") else due_date
 
-    now_utc = datetime.now(timezone.utc).date()   # force UTC calendar date
-    days_overdue = (now_utc - due_date).days
+    today = datetime.now(timezone.utc).date()
+    days_overdue = (today - due_date).days
 
     if days_overdue <= 0:
         return {'fee_amount': 0.00, 'days_overdue': 0, 'status': 'Book was returned on time'}
