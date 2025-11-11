@@ -9,7 +9,7 @@ def test_late_fee_no_overdue():
 
 def test_late_fee_within_7_days():
     result = calculate_late_fee_for_book("123456", 4)  #  2 days overdue
-    assert result["days_overdue"] == 3
+    assert result["days_overdue"] == 2
     assert result["fee_amount"] == 2 * 0.50
     assert "overdue" in result["status"].lower()
 
