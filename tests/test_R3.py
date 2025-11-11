@@ -1,5 +1,5 @@
 import pytest
-from library_service import borrow_book_by_patron
+from services.library_service import borrow_book_by_patron
 from database import insert_book, insert_borrow_record
 
 

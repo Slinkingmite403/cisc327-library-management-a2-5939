@@ -1,5 +1,5 @@
 import pytest
-from library_service import calculate_late_fee_for_book
+from services.library_service import calculate_late_fee_for_book
 
 def test_late_fee_no_overdue():
     result = calculate_late_fee_for_book("123456", 3)

@@ -5,11 +5,13 @@ Contains all the core business logic for the Library Management System
 
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
+from services.payment_service import PaymentGateway
 from database import (
     get_book_by_id, get_book_by_isbn, get_patron_borrow_count,
     insert_book, insert_borrow_record, update_book_availability,
     update_borrow_record_return_date, get_all_books, get_patron_borrowed_books
 )
+
 
 def add_book_to_catalog(title: str, author: str, isbn: str, total_copies: int) -> Tuple[bool, str]:
     """
@@ -169,7 +171,7 @@ def calculate_late_fee_for_book(patron_id: str, book_id: int) -> Dict:
     book_record = next((b for b in borrowed_books if b["book_id"] == book_id), None)
 
     if not book_record:
-        return {'fee_amount': 0.00, 'days_overdue': 0, 'status': 'No such borroed book'}
+        return {'fee_amount': 0.00, 'days_overdue': 0, 'status': 'No such borrowed book'}
 
     due_date = book_record["due_date"]
     days_overdue = (datetime.now() - due_date).days
@@ -271,3 +273,50 @@ def get_patron_status_report(patron_id: str) -> Dict:
         "books_borrowed_count": books_borrowed_count,
         "borrowing_history": borrowing_history
     }
+
+def pay_late_fees(patron_id: str, book_id: str, payment_gateway: PaymentGateway) -> Tuple[bool, str, str]:
+    if not patron_id.isdigit() or len(patron_id) != 6:
+        return False, "Invalid patron ID", None
+    
+    book = get_book_by_id(book_id)
+
+    if not book:
+        return False, "Invalid book ID", None
+    
+    fees = calculate_late_fee_for_book(patron_id, book_id)
+    if (fees["fee_amount"] == 0.00):
+        return False, "No late fees", None
+   
+    try:
+        success, transaction_id, message = payment_gateway.process_payment(
+            patron_id=patron_id,        # these are arguements for the process_payment function
+            amount=fees["fee_amount"],  # param=value
+        )
+        if success:
+            return True, f"Payment successful! {message}", transaction_id
+        else:
+            return False, f"Payment failed: {message}", None
+
+    except Exception as e:
+        return False, f"Payment processing error: {str(e)}", None
+
+
+def refund_late_fee_payment(transaction_id, amount, payment_gateway) -> Tuple[bool, str]:
+    if not transaction_id.isdigit() or len(transaction_id) != 8:        # transaction_id must be an arbitrary 8 digits long
+        return False, "Invalid transaction ID", None
+
+    if amount > 15.00 or amount <= 0.00:
+        return False, "Invalid fee amount", None
+
+    try:
+        success, refund_id, message = payment_gateway.refund_payment(
+            amount=amount,
+        )
+        if success:
+            return True, f"Refund successful! {message}", refund_id
+        else:
+            return False, f"Refund failed: {message}", None
+    
+    except Exception as e:
+        return False, f"Refund processing error: {str(e)}", None
+    
