@@ -174,7 +174,7 @@ def calculate_late_fee_for_book(patron_id: str, book_id: int) -> Dict:
         return {'fee_amount': 0.00, 'days_overdue': 0, 'status': 'No such borrowed book'}
 
     due_date = book_record["due_date"]
-    days_overdue = (datetime.now() - due_date).days
+    days_overdue = (datetime.now().date() - due_date.date()).days
 
     if days_overdue <= 0:
         return {'fee_amount': 0.00, 'days_overdue': 0, 'status': 'Book was returned on time'}
